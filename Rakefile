@@ -15,8 +15,8 @@ Jeweler::Tasks.new do |gem|
   gem.name = "bio-cnls_screenscraper"
   gem.homepage = "http://github.com/wwood/bioruby-cnls_screenscraper"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = %Q{Programmatic interface to the cNLS nuclear localisation signal prediction software}
+  gem.description = %Q{Programmatic interface to the cNLS nuclear localisation signal prediction software}
   gem.email = "donttrustben@gmail.com"
   gem.authors = ["Ben J. Woodcroft"]
   # Include your dependencies below. Runtime dependencies are required when using your gem,
