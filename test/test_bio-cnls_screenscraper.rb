@@ -27,4 +27,14 @@ class TestBioCnlsScreenscraper < Test::Unit::TestCase
     assert_equal 10.0, result.signals.sort[0].score
     assert_equal 1, result.signals.sort[0].position
   end
+  
+  should "apply the correct monopartite cutoff" do
+    nls = Bio::CNLS::Result::MonopartiteNLS.new
+    nls.score = 8.0
+    result = Bio::CNLS::Result.new
+    result.signals.push nls
+    assert_equal true, result.monopartite_predicted?(7.0)
+    assert_equal true, result.monopartite_predicted?(8.0)
+    assert_equal false, result.monopartite_predicted?(9.0)
+  end
 end

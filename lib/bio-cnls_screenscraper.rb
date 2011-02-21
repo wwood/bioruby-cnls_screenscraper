@@ -32,6 +32,46 @@ module Bio
       def predicted?
         !signals.nil? and !signals.empty? 
       end
+      
+      def monopartite_predicted?(minimum_score=nil)
+        @signals.each do |s|
+          if s.kind_of?(MonopartiteNLS)
+            return true if minimum_score.nil? #if no cutoff, return true
+            return true if s.score >= minimum_score #otherwise apply the cutoff
+          end
+        end
+        return false
+      end
+      
+      def bipartite_predicted?(minimum_score=nil)
+        @signals.each do |s|
+          if s.kind_of?(BipartiteNLS)
+            return true if minimum_score.nil? #if no cutoff, return true
+            return true if s.score >= minimum_score #otherwise apply the cutoff
+          end
+        end
+        return false
+      end
+      
+      def max_monopartite_score
+        max = 0.0
+        @signals.each do |s|
+          if s.kind_of?(MonopartiteNLS) and s.score > max
+            max = s.score
+          end
+        end
+        return max
+      end
+      
+      def max_bipartite_score
+        max = 0.0
+        @signals.each do |s|
+          if s.kind_of?(BipartiteNLS) and s.score > max
+            max = s.score
+          end
+        end
+        return max
+      end
     end
     
     # A class used to automatically submit results to the cNLS webserver and parse the HTML results. 
@@ -85,9 +125,12 @@ module Bio
         
         split_regex = /<\/code><\/big><\/strong><br.{0,2}><strong><big><code>/
         
-        
-        # parse out monopartite signals
-        if matches = html.match(monopartite_regex)
+        # Make sure the sequence isn't too long
+        if html.match(/Query sequence should be < 5000 aa/)
+          raise Exception, "Query sequence provided was too long (> 5000 aa)"
+          
+          # parse out monopartite signals
+        elsif matches = html.match(monopartite_regex)
           positions = matches[1].split(split_regex)
           seqs = matches[2].split(split_regex)
           scores = matches[3].split(split_regex)
@@ -143,7 +186,10 @@ if __FILE__ == $0
   
   options = {
   :verbose => true,
-  :cache_html => false
+  :cache_html => false,
+  :use_cache => false,
+  :cutoff_score => nil,
+  :print_scores => false,
   }
   o = OptionParser.new do |opts|
     opts.banner = [
@@ -153,41 +199,94 @@ if __FILE__ == $0
     opts.on('-q','--quiet','Opposite of verbose. Default is not quiet (verbose is on)') do
       options[:verbose] = false
     end
-    opts.on('-h','--html','Cache HTML results in the current directory instead of parsing them') do
+    opts.on('-h','--html','Cache HTML results in the current directory instead of parsing them. Default false.') do
       options[:cache_html] = true
+    end
+    opts.on('-c','--cached','Parse the cache HTML results (as previously generated using -h/--html) in the current directory. Default false.') do
+      options[:use_cache] = true
+    end
+    opts.on('-s','--score SCORE','Cutoff score to be used when parsing results, between 0 and 10. Used when parsing results, not when querying the server') do |s|
+      options[:cutoff_score] = s.to_f
+    end
+    opts.on('-p','--print-scores','Output scores as well as true/false predictions. Default false.') do |s|
+      options[:print_scores] = true
     end
   end
   o.parse!
   
-  Bio::FlatFile.foreach(ARGF) do |entry|
-    # Sequences are automatically disqualified if they contain characters that are neither amino acids or stop codons
-    fails = entry.seq.gsub(/[#{ACCEPTABLE_AMINO_ACID_CHARACTERS.join('')}]/,'')
-    if fails.length > 0
-      if options[:verbose]
-        $stderr.puts "Found unacceptable characters in #{entry.definition}: #{fails}"
-      end
-      next
+  print_result_headers = lambda do
+    to_print = [
+    'Name',
+    'Monopartite signal?',
+    'Bipartite signal?'
+    ]
+    if options[:print_scores]
+      to_print.push 'Max monopartite score'
+      to_print.push 'Max bipartite score'
+    end
+    
+    puts to_print.join("\t")
+  end
+  
+  # Define a procedure for printing parsed results so it is more DRY
+  print_parsed_results = lambda do |sequence_name, cnls_result, score|
+    to_print = [
+    sequence_name,
+    cnls_result.monopartite_predicted?(score),
+    cnls_result.bipartite_predicted?(score)
+    ]
+    if options[:print_scores]
+      to_print.push cnls_result.max_monopartite_score
+      to_print.push cnls_result.max_bipartite_score
+    end
+    
+    puts to_print.join("\t")
+  end
+  
+  # If 
+  if options[:use_cache]
+    print_result_headers.call
+    Dir.foreach('.') do |file|
+      next if File.directory?(file) #skip '.', '..' etc.
       
-      # Sequence length must be greater than the minimum, excluding
-      # stop codons
-    elsif entry.seq.gsub(/\*/,'').length < QUERY_LENGTH_MINIMUM
-      if options[:verbose]
-        $stderr.puts "Query sequence too short (less than #{QUERY_LENGTH_MINIMUM} residues excluding stop codons): #{entry.definition}"
+      begin
+        res = Bio::CNLS::Screenscraper.parse_html_result(File.read(file))
+        print_parsed_results.call(
+                                  file, res, options[:cutoff_score]
+        )
+      rescue Exception => e
+        $stderr.puts "Failed to parse #{file}: #{e}"
       end
-    else
-      # This sequence passes, run the prediction on it
-      if options[:cache_html]
-        res = Bio::CNLS::Screenscraper.get_raw_html_result(entry.seq)
-        File.open("#{entry.definition}.html",'w') do |f|
-          f.puts res
+    end
+  else
+    Bio::FlatFile.foreach(ARGF) do |entry|
+      # Sequences are automatically disqualified if they contain characters that are neither amino acids or stop codons
+      fails = entry.seq.gsub(/[#{ACCEPTABLE_AMINO_ACID_CHARACTERS.join('')}]/,'')
+      if fails.length > 0
+        if options[:verbose]
+          $stderr.puts "Found unacceptable characters in #{entry.definition}: #{fails}"
         end
-        $stderr.print '.' if options[:verbose]
+        next
+        
+        # Sequence length must be greater than the minimum, excluding
+        # stop codons
+      elsif entry.seq.gsub(/\*/,'').length < QUERY_LENGTH_MINIMUM
+        if options[:verbose]
+          $stderr.puts "Query sequence too short (less than #{QUERY_LENGTH_MINIMUM} residues excluding stop codons): #{entry.definition}"
+        end
       else
-        res = Bio::CNLS::Screenscraper.submit(entry.seq)
-        puts [
-        entry.definition,
-        res.predicted?
-        ].join("\t")
+        # This sequence passes, run the prediction on it
+        if options[:cache_html]
+          res = Bio::CNLS::Screenscraper.get_raw_html_result(entry.seq)
+          File.open("#{entry.definition}.html",'w') do |f|
+            f.puts res
+          end
+          $stderr.print '.' if options[:verbose]
+        else
+          res = Bio::CNLS::Screenscraper.submit(entry.seq)
+          print_result_headers.call
+          print_parsed_results.call(entry, res, options[:cutoff_score])
+        end
       end
     end
   end
