@@ -1,6 +1,18 @@
 = bio-cnls_screenscraper
 
-Description goes here.
+bio-cnls_screenscraper is a programmatic biogem interface to http://nls-mapper.iab.keio.ac.jp/cgi-bin/NLS_Mapper_form.cgi - a server for prediction of importin α-dependent nuclear localization signals.
+
+First, cache the results for each sequence in your amino acid sequence fasta file. This contacts the cNLS server once for each sequence, waiting 1 second in between so as not to overload the server. Each result is saved as a separate HTML file, so it is best to do this command in an empty directory.
+
+  mkdir cNLS_cache
+  cd cNLS_cache
+  ./<path_to_bioruby_gem>/lib/bio/cnls_screenscraper.rb -h <fasta_file> 2>cNLS_caching.err
+  
+Then parse these HTML files and collate into a single tab-separated values file. Perhaps best to put the results file not in the cache directory. The parsing uses the default cutoff of 8.0 for monopartite NLSs, and 7.0 for bipartite NLSs.
+
+  ./<path_to_bioruby_gem>/lib/bio/cnls_screenscraper.rb -cp >../cNLS_results.csv
+
+Some sequences are unacceptable to the cNLS server - sequences that are too short (<19 aa), too long, or contain non-standard amino acids such as 'X'.
 
 == Contributing to bio-cnls_screenscraper
  

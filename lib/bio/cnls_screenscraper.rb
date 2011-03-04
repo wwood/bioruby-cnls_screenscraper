@@ -193,7 +193,7 @@ if __FILE__ == $0
   }
   o = OptionParser.new do |opts|
     opts.banner = [
-    'Usage: bio-cnls_formatter.rb [-qh] [fasta_filename]',
+    'Usage: bio-cnls_formatter.rb [-qhcsp] [fasta_filename]',
     '\tfasta file can also be piped in on STDIN.'
     ]
     opts.on('-q','--quiet','Opposite of verbose. Default is not quiet (verbose is on)') do

@@ -1,8 +1,7 @@
 require 'helper'
-require 'bio-cnls_screenscraper'
 
 class TestBioCnlsScreenscraper < Test::Unit::TestCase
-  @@data_dir = File.join(File.dirname(__FILE__),['data'])
+  @@data_dir = File.join(File.dirname(__FILE__),'..',['data'])
  
   should "correctly parse hit results with no hits" do
     html = File.open(File.join(@@data_dir,'nohits.html')).read
