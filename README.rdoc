@@ -6,11 +6,11 @@ First, cache the results for each sequence in your amino acid sequence fasta fil
 
   mkdir cNLS_cache
   cd cNLS_cache
-  ./<path_to_bioruby_gem>/lib/bio/cnls_screenscraper.rb -h <fasta_file> 2>cNLS_caching.err
+  bio-nls_screenscraper.rb -h <fasta_file> 2>cNLS_caching.err
   
 Then parse these HTML files and collate into a single tab-separated values file. Perhaps best to put the results file not in the cache directory. The parsing uses the default cutoff of 8.0 for monopartite NLSs, and 7.0 for bipartite NLSs.
 
-  ./<path_to_bioruby_gem>/lib/bio/cnls_screenscraper.rb -cp >../cNLS_results.csv
+  bio-nls_screenscraper.rb -cp >../cNLS_results.csv
 
 Some sequences are unacceptable to the cNLS server - sequences that are too short (<19 aa), too long, or contain non-standard amino acids such as 'X'.
 

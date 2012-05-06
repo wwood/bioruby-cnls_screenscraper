@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 require 'optparse'
 require 'bio-cnls_screenscraper'
 
@@ -108,7 +110,7 @@ else
       else
         res = Bio::CNLS::Screenscraper.submit(entry.seq)
         print_result_headers.call
-        print_parsed_results.call(entry, res, options[:cutoff_score])
+        print_parsed_results.call(entry.definition, res, options[:cutoff_score])
       end
     end
   end
