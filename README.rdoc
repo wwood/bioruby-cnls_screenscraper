@@ -14,15 +14,15 @@ Then parse these HTML files and collate into a single tab-separated values file.
 
 Some sequences are unacceptable to the cNLS server - sequences that are too short (<19 aa), too long, or contain non-standard amino acids such as 'X'.
 
-== Contributing to bio-cnls_screenscraper
- 
-* Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet
-* Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it
-* Fork the project
-* Start a feature/bugfix branch
-* Commit and push until you are happy with your contribution
-* Make sure to add tests for it. This is important so I don't break it in a future version unintentionally.
-* Please try not to mess with the Rakefile, version, or history. If you want to have your own version, or is otherwise necessary, that is fine, but please isolate to its own commit so I can cherry-pick around it.
+== Citing
+
+If you use this software, please cite:
+
+Organellar proteomics reveals hundreds of novel nuclear proteins in the malaria parasite Plasmodium falciparum
+
+Sophie C Oehring, Ben J Woodcroft, Suzette Moes, Johanna Wetzel, Olivier Dietz, Andreas Pulfer, Chaitali Dekiwadia, Pascal Maeser, Christian Flueck, Kathrin Witmer, Nicolas MB Brancucci, Igor Niederwieser, Paul Jenoe, Stuart A Ralph and Till S Voss
+
+Genome Biology 2012, 13:R108 doi:10.1186/gb-2012-13-11-r108
 
 == Copyright
 
